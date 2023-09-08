@@ -1,13 +1,3 @@
-// ==UserScript==
-// @name        Test
-// @namespace   Violentmonkey Scripts
-// @match       *://*.furaffinity.net/*
-// @grant       none
-// @version     1.0.0
-// @author      Midori Dragon
-// @description 8.9.2023, 14:00:02
-// ==/UserScript==
-
 //#region Globals
 class Settings {
   constructor() {
