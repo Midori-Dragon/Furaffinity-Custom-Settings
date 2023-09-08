@@ -1,9 +1,19 @@
+// ==UserScript==
+// @name        Test
+// @namespace   Violentmonkey Scripts
+// @match       *://*.furaffinity.net/*
+// @grant       none
+// @version     1.0.0
+// @author      Midori Dragon
+// @description 8.9.2023, 14:00:02
+// ==/UserScript==
+
 //#region Globals
 class Settings {
   constructor() {
-    this.settingsName = "Extension Settings";
-    this.settingsProvider = "Custom Furaffinity Settings";
-    this.settings = [];
+    this.Name = "Extension Settings";
+    this.Provider = "Custom Furaffinity Settings";
+    this.Settings = [];
   }
 
   addSetting(newSetting) {
@@ -28,7 +38,7 @@ class Settings {
       setting.action(target);
     });
     setting.action = newSetting.action;
-    CustomSettings.settings.push(setting);
+    CustomSettings.Settings.push(setting);
   }
 }
 
@@ -73,8 +83,8 @@ class LocalSetting {
   }
 }
 
-let nameId = makeIdCompatible(CustomSettings.settingsName);
-let providerId = makeIdCompatible(CustomSettings.settingsProvider);
+let nameId = makeIdCompatible(CustomSettings.Name);
+let providerId = makeIdCompatible(CustomSettings.Provider);
 let bodyContainer;
 //#endregion
 
@@ -100,12 +110,12 @@ async function addExSettings() {
   }
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId;
-  exSettingsHeader.textContent = CustomSettings.settingsName;
+  exSettingsHeader.textContent = CustomSettings.Name;
   settings.appendChild(exSettingsHeader);
 
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId;
-  currExSettings.textContent = CustomSettings.settingsProvider;
+  currExSettings.textContent = CustomSettings.Provider;
   currExSettings.style.cursor = "pointer";
   currExSettings.onclick = function () {
     localStorage.setItem(nameId, true);
@@ -126,12 +136,12 @@ async function addExSettingsSidebar() {
   }
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId + "_side";
-  exSettingsHeader.textContent = CustomSettings.settingsName;
+  exSettingsHeader.textContent = CustomSettings.Name;
   settings.appendChild(exSettingsHeader);
 
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId + "_side";
-  currExSettings.textContent = CustomSettings.settingsProvider;
+  currExSettings.textContent = CustomSettings.Provider;
   currExSettings.style.cursor = "pointer";
   currExSettings.onclick = function () {
     localStorage.setItem(nameId, true);
@@ -155,14 +165,14 @@ async function loadSettings() {
   const headerContainer = document.createElement("div");
   headerContainer.className = "section-header";
   const header = document.createElement("h2");
-  header.textContent = settingsName;
+  header.textContent = CustomSettings.Name;
   headerContainer.appendChild(header);
   section.appendChild(headerContainer);
   bodyContainer = document.createElement("div");
   bodyContainer.className = "section-body";
 
   // Creating the settings
-  for (const setting of CustomSettings.settings) {
+  for (const setting of CustomSettings.Settings) {
     const settingElem = setting.document.getElementById(setting.id);
     switch (setting.type) {
       case SettingTypes.Number:
