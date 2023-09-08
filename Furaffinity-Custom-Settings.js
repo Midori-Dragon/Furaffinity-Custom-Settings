@@ -1,8 +1,12 @@
-addExSettings();
-if (window.location.toString().includes("controls/settings")) {
-  addExSettingsSidebar();
-  const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
-  if (exSettings) loadSettings();
+try {
+  addExSettings();
+  if (window.location.toString().includes("controls/settings")) {
+    addExSettingsSidebar();
+    const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
+    if (exSettings) loadSettings();
+  }
+} catch (e) {
+  console.error(e);
 }
 
 //#region Globals
@@ -68,7 +72,7 @@ const SettingTypes = Object.freeze({
   Action: Symbol("Action"),
 });
 
-//export { Settings, Setting, SettingType, CustomSettings, SettingTypes };
+// export { Settings, Setting, SettingType, CustomSettings, SettingTypes };
 //#endregion
 
 //#region Locals
