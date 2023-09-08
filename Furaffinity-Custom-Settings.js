@@ -1,14 +1,3 @@
-try {
-  addExSettings();
-  if (window.location.toString().includes("controls/settings")) {
-    addExSettingsSidebar();
-    const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
-    if (exSettings) loadSettings();
-  }
-} catch (e) {
-  console.error(e);
-}
-
 //#region Globals
 class Settings {
   constructor() {
@@ -89,6 +78,17 @@ let nameId = makeIdCompatible(Settings.settingsName);
 let providerId = makeIdCompatible(Settings.settingsProvider);
 let bodyContainer;
 //#endregion
+
+try {
+  addExSettings();
+  if (window.location.toString().includes("controls/settings")) {
+    addExSettingsSidebar();
+    const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
+    if (exSettings) loadSettings();
+  }
+} catch (e) {
+  console.error(e);
+}
 
 // Adding settings to the navigation menu
 async function addExSettings() {
