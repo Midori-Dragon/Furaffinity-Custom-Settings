@@ -8,7 +8,11 @@ class Settings {
 
   addSetting(newSetting) {
     const setting = new LocalSetting();
-    setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
+    if (newSetting.id) setting.id = newSetting.id;
+    else {
+      setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
+      newSetting.id = setting.id;
+    }
     setting.type = newSetting.type;
     setting.defaultValue = newSetting.defaultValue;
     setting.value = newSetting.defaultValue;
@@ -53,13 +57,31 @@ class Settings {
 
 class Setting {
   constructor(name, description, type, typeDescription, defaultValue, action) {
+    this._id;
     this.name = name;
     this.description = description;
     this.type = type;
     this.typeDescription = typeDescription;
     this.defaultValue = defaultValue;
     this.action = action;
-    this.value;
+    this._idFirstSet = true;
+  }
+
+  set id(newValue) {
+    if (this._idFirstSet) {
+      this._id = newValue;
+      this._idFirstSet = false;
+    } else throw new Error("Can't set Id of a Setting that was already been set.");
+  }
+  get id() {
+    return this._id;
+  }
+
+  set value(newValue) {
+    getLocalSettingById(this._id).value = newValue;
+  }
+  get value() {
+    return getLocalSettingById(this._id).value;
   }
 }
 
@@ -288,6 +310,10 @@ function makeIdCompatible(inputString) {
 
   // Ensure the ID starts with a letter
   return /^[0-9]/.test(sanitizedString) ? "id-" + sanitizedString : sanitizedString;
+}
+
+function getLocalSettingById(id) {
+  return CustomSettings.Settings.find((setting) => setting.id === id);
 }
 
 function convertStringToValue(value) {
