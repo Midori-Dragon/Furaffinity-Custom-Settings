@@ -68,7 +68,7 @@ const SettingTypes = Object.freeze({
   Action: Symbol("Action"),
 });
 
-export { Settings, Setting, SettingType, CustomSettings, SettingTypes };
+//export { Settings, Setting, SettingType, CustomSettings, SettingTypes };
 //#endregion
 
 //#region Locals
