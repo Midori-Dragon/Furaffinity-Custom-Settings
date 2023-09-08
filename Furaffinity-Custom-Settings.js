@@ -9,47 +9,44 @@ class Settings {
   addSetting(newSetting) {
     const setting = new LocalSetting();
     setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
+    setting.type = newSetting.type;
+    setting.defaultValue = newSetting.defaultValue;
+    setting.value = newSetting.defaultValue;
     setting.document = createSetting(setting.id, newSetting.name, newSetting.description, newSetting.type, newSetting.typeDescription, (target) => {
       let value;
-      switch (type) {
+      switch (setting.type) {
         case SettingTypes.Number:
           value = +target.value;
           setting.value = value;
           newSetting.value = value;
-          localStorage.setItem(setting.id, value);
+          if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+          else localStorage.setItem(setting.id, value);
           break;
         case SettingTypes.Boolean:
           value = target.checked;
           setting.value = value;
           newSetting.value = value;
-          localStorage.setItem(setting.id, value);
+          if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+          else localStorage.setItem(setting.id, value);
           break;
       }
       setting.action(target);
     });
     setting.action = newSetting.action;
+    console.log(setting);
     CustomSettings.Settings.push(setting);
   }
 }
 
 class Setting {
-  constructor(name, description, type, typeDescription, action) {
+  constructor(name, description, type, typeDescription, defaultValue, action) {
     this.name = name;
     this.description = description;
     this.type = type;
     this.typeDescription = typeDescription;
+    this.defaultValue = defaultValue;
     this.action = action;
     this.value;
-  }
-}
-
-class SettingType {
-  static Number = new SettingType("Number");
-  static Boolean = new SettingType("Boolean");
-  static Action = new SettingType("Action");
-
-  constructor(type) {
-    this.type = type;
   }
 }
 
@@ -59,17 +56,17 @@ const SettingTypes = Object.freeze({
   Boolean: Symbol("Boolean"),
   Action: Symbol("Action"),
 });
-
-// export { Settings, Setting, SettingType, CustomSettings, SettingTypes };
 //#endregion
 
 //#region Locals
 class LocalSetting {
   constructor() {
     this.id;
+    this.type;
     this.document;
     this.action;
     this.value;
+    this.defaultValue;
   }
 }
 
@@ -143,6 +140,9 @@ async function addExSettingsSidebar() {
 // Creating the settings page
 async function loadSettings() {
   localStorage.setItem(nameId, false);
+
+  if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
+
   const columnPage = document.getElementById("columnpage");
   const content = columnPage.querySelector('div[class="content"]');
 
@@ -162,16 +162,21 @@ async function loadSettings() {
   bodyContainer.className = "section-body";
 
   // Creating the settings
+  console.log(CustomSettings.Settings);
   for (const setting of CustomSettings.Settings) {
-    const settingElem = setting.document.getElementById(setting.id);
+    const settingElem = setting.document.querySelector(`[id="${setting.id}"]`);
+    console.log(setting.type);
     switch (setting.type) {
       case SettingTypes.Number:
+        console.log("number");
         settingElem.value = setting.value;
         break;
       case SettingTypes.Boolean:
+        console.log("boolean");
         settingElem.checked = setting.value;
         break;
     }
+    console.log("test");
     bodyContainer.appendChild(setting.document);
   }
 
@@ -239,21 +244,24 @@ function createSettingNumber(id, action) {
 }
 
 function createSettingBoolean(id, typeDescription, action) {
+  const container = document.createElement("div");
   const setting = document.createElement("input");
   setting.id = id;
   setting.type = "checkbox";
   setting.style.cursor = "pointer";
   setting.style.marginRight = "4px";
   setting.addEventListener("change", () => action(setting));
-  settingOption.appendChild(setting);
-  const settingOptionLabel = document.createElement("label");
-  settingOptionLabel.textContent = typeDescription;
-  settingOptionLabel.style.cursor = "pointer";
-  settingOptionLabel.addEventListener("click", () => {
+  container.appendChild(setting);
+  const settingLabel = document.createElement("label");
+  settingLabel.textContent = typeDescription;
+  settingLabel.style.cursor = "pointer";
+  settingLabel.style.userSelect = "none";
+  settingLabel.addEventListener("click", () => {
     setting.checked = !setting.checked;
     action(setting);
   });
-  return setting;
+  container.appendChild(settingLabel);
+  return container;
 }
 
 function createSettingAction(id, typeDescription, action) {
