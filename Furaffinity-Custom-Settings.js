@@ -1,3 +1,13 @@
+// ==UserScript==
+// @name        Test
+// @namespace   Violentmonkey Scripts
+// @match       *://*.furaffinity.net/*
+// @grant       none
+// @version     1.0.0
+// @author      Midori Dragon
+// @description 8.9.2023, 14:00:02
+// ==/UserScript==
+
 //#region Globals
 class Settings {
   constructor() {
@@ -29,7 +39,6 @@ class Settings {
     });
     setting.action = newSetting.action;
     CustomSettings.settings.push(setting);
-    // setting.querySelector('[id*="setting"]').checked = showLoadLastXFavsButton;
   }
 }
 
@@ -74,8 +83,8 @@ class LocalSetting {
   }
 }
 
-let nameId = makeIdCompatible(Settings.settingsName);
-let providerId = makeIdCompatible(Settings.settingsProvider);
+let nameId = makeIdCompatible(CustomSettings.settingsName);
+let providerId = makeIdCompatible(CustomSettings.settingsProvider);
 let bodyContainer;
 //#endregion
 
@@ -93,7 +102,6 @@ try {
 // Adding settings to the navigation menu
 async function addExSettings() {
   const settings = document.querySelector('ul[class="navhideonmobile"]').querySelector('a[href="/controls/settings/"]').parentNode;
-
   if (document.getElementById(nameId)) {
     document.getElementById(providerId).addEventListener("click", () => {
       localStorage.setItem(nameId, true);
@@ -102,12 +110,12 @@ async function addExSettings() {
   }
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId;
-  exSettingsHeader.textContent = Settings.settingsName;
+  exSettingsHeader.textContent = CustomSettings.settingsName;
   settings.appendChild(exSettingsHeader);
 
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId;
-  currExSettings.textContent = Settings.settingsProvider;
+  currExSettings.textContent = CustomSettings.settingsProvider;
   currExSettings.style.cursor = "pointer";
   currExSettings.onclick = function () {
     localStorage.setItem(nameId, true);
@@ -128,12 +136,12 @@ async function addExSettingsSidebar() {
   }
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId + "_side";
-  exSettingsHeader.textContent = Settings.settingsName;
+  exSettingsHeader.textContent = CustomSettings.settingsName;
   settings.appendChild(exSettingsHeader);
 
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId + "_side";
-  currExSettings.textContent = Settings.settingsProvider;
+  currExSettings.textContent = CustomSettings.settingsProvider;
   currExSettings.style.cursor = "pointer";
   currExSettings.onclick = function () {
     localStorage.setItem(nameId, true);
