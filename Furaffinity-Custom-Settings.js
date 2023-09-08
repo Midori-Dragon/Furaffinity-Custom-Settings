@@ -36,6 +36,19 @@ class Settings {
     console.log(setting);
     CustomSettings.Settings.push(setting);
   }
+
+  loadSettings() {
+    try {
+      addExSettings();
+      if (window.location.toString().includes("controls/settings")) {
+        addExSettingsSidebar();
+        const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
+        if (exSettings) loadSettings();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }
 
 class Setting {
@@ -74,17 +87,6 @@ let nameId = makeIdCompatible(CustomSettings.Name);
 let providerId = makeIdCompatible(CustomSettings.Provider);
 let bodyContainer;
 //#endregion
-
-try {
-  addExSettings();
-  if (window.location.toString().includes("controls/settings")) {
-    addExSettingsSidebar();
-    const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
-    if (exSettings) loadSettings();
-  }
-} catch (e) {
-  console.error(e);
-}
 
 // Adding settings to the navigation menu
 async function addExSettings() {
