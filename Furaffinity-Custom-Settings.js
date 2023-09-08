@@ -33,12 +33,12 @@ class Settings {
       setting.action(target);
     });
     setting.action = newSetting.action;
-    console.log(setting);
     CustomSettings.Settings.push(setting);
   }
 
-  loadSettings() {
+  async loadSettings() {
     try {
+      await readSettings();
       addExSettings();
       if (window.location.toString().includes("controls/settings")) {
         addExSettingsSidebar();
@@ -139,6 +139,15 @@ async function addExSettingsSidebar() {
   settings.appendChild(currExSettings);
 }
 
+// Reading stored Settings data
+async function readSettings() {
+  for (const setting of CustomSettings.Settings) {
+    const value = localStorage.getItem(setting.id);
+    if (value == null || value == undefined) continue;
+    setting.value = convertStringToValue(value);
+  }
+}
+
 // Creating the settings page
 async function loadSettings() {
   localStorage.setItem(nameId, false);
@@ -164,21 +173,16 @@ async function loadSettings() {
   bodyContainer.className = "section-body";
 
   // Creating the settings
-  console.log(CustomSettings.Settings);
   for (const setting of CustomSettings.Settings) {
     const settingElem = setting.document.querySelector(`[id="${setting.id}"]`);
-    console.log(setting.type);
     switch (setting.type) {
       case SettingTypes.Number:
-        console.log("number");
         settingElem.value = setting.value;
         break;
       case SettingTypes.Boolean:
-        console.log("boolean");
         settingElem.checked = setting.value;
         break;
     }
-    console.log("test");
     bodyContainer.appendChild(setting.document);
   }
 
@@ -284,4 +288,16 @@ function makeIdCompatible(inputString) {
 
   // Ensure the ID starts with a letter
   return /^[0-9]/.test(sanitizedString) ? "id-" + sanitizedString : sanitizedString;
+}
+
+function convertStringToValue(value) {
+  if (value === "true" || value === "false") {
+    return value === "true";
+  }
+
+  const parsedNumber = parseFloat(value);
+  if (!isNaN(parsedNumber)) {
+    return parsedNumber;
+  }
+  return value;
 }
