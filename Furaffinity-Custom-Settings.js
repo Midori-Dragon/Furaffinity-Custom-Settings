@@ -65,6 +65,8 @@ class Setting {
     this.defaultValue = defaultValue;
     this.action = action;
     this._idFirstSet = true;
+
+    CustomSettings.addSetting(this);
   }
 
   set id(newValue) {
