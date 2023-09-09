@@ -1,9 +1,28 @@
 //#region Globals
 class Settings {
   constructor() {
-    this.Name = "Extension Settings";
-    this.Provider = "Custom Furaffinity Settings";
+    this._name = "Extension Settings";
+    this._provider = "Custom Furaffinity Settings";
     this.Settings = [];
+
+    nameId = makeIdCompatible(this._name);
+    providerId = makeIdCompatible(this._provider);
+  }
+
+  set Name(value) {
+    this._name = value;
+    nameId = makeIdCompatible(this._name);
+  }
+  get Name() {
+    return this._name;
+  }
+
+  set Provider(value) {
+    this._provider = value;
+    providerId = makeIdCompatible(this._provider);
+  }
+  get Provider() {
+    return this._provider;
   }
 
   addSetting(newSetting) {
@@ -122,8 +141,8 @@ class LocalSetting {
   }
 }
 
-let nameId = makeIdCompatible(CustomSettings.Name);
-let providerId = makeIdCompatible(CustomSettings.Provider);
+let nameId;
+let providerId;
 let bodyContainer;
 //#endregion
 
