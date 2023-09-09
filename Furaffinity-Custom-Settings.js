@@ -47,8 +47,7 @@ class Settings {
       addExSettings();
       if (window.location.toString().includes("controls/settings")) {
         addExSettingsSidebar();
-        const exSettings = JSON.parse(localStorage.getItem(nameId)) || false;
-        if (exSettings) loadSettings();
+        if (window.location.toString().includes("?extension=" + nameId)) loadSettings();
       }
     } catch (e) {
       console.error(e);
@@ -175,9 +174,6 @@ async function readSettings() {
 
 // Creating the settings page
 async function loadSettings() {
-  console.log(window.location.toString());
-  console.log("?extension=" + nameId);
-  if (!window.location.toString().includes("?extension=" + nameId)) return;
   if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
 
   const columnPage = document.getElementById("columnpage");
