@@ -60,6 +60,7 @@ class Settings {
     for (const setting of CustomSettings.Settings) {
       settingsString += `"${setting.toString()}", `;
     }
+    settingsString = settingsString.slice(0, -2);
     settingsString += ")";
     return settingsString;
   }
@@ -129,13 +130,9 @@ let bodyContainer;
 
 // Adding settings to the navigation menu
 async function addExSettings() {
+  if (document.getElementById(nameId)) return;
+
   const settings = document.querySelector('ul[class="navhideonmobile"]').querySelector('a[href="/controls/settings/"]').parentNode;
-  if (document.getElementById(nameId)) {
-    document.getElementById(providerId).addEventListener("click", () => {
-      localStorage.setItem(nameId, true);
-    });
-    return;
-  }
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId;
   exSettingsHeader.textContent = CustomSettings.Name;
@@ -144,24 +141,16 @@ async function addExSettings() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId;
   currExSettings.textContent = CustomSettings.Provider;
+  currExSettings.href = "/controls/settings?provider=" + providerId;
   currExSettings.style.cursor = "pointer";
-  currExSettings.onclick = function () {
-    localStorage.setItem(nameId, true);
-    window.location = "https://www.furaffinity.net/controls/settings";
-  };
   settings.appendChild(currExSettings);
 }
 
 // Adding settings to the settings sidebar menu
 async function addExSettingsSidebar() {
-  const settings = document.getElementById("controlpanelnav");
+  if (document.getElementById(nameId + "_side")) return;
 
-  if (document.getElementById(nameId + "side")) {
-    document.getElementById(providerId + "_side").addEventListener("click", () => {
-      localStorage.setItem(nameId, true);
-    });
-    return;
-  }
+  const settings = document.getElementById("controlpanelnav");
   const exSettingsHeader = document.createElement("h3");
   exSettingsHeader.id = nameId + "_side";
   exSettingsHeader.textContent = CustomSettings.Name;
@@ -170,11 +159,8 @@ async function addExSettingsSidebar() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId + "_side";
   currExSettings.textContent = CustomSettings.Provider;
+  currExSettings.href = "/controls/settings?provider=" + providerId;
   currExSettings.style.cursor = "pointer";
-  currExSettings.onclick = function () {
-    localStorage.setItem(nameId, true);
-    window.location = "https://www.furaffinity.net/controls/settings";
-  };
   settings.appendChild(currExSettings);
 }
 
@@ -189,8 +175,7 @@ async function readSettings() {
 
 // Creating the settings page
 async function loadSettings() {
-  localStorage.setItem(nameId, false);
-
+  if (!window.location.toString().includes("?provider=" + providerId)) return;
   if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
 
   const columnPage = document.getElementById("columnpage");
