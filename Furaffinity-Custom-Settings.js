@@ -141,7 +141,7 @@ async function addExSettings() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId;
   currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?provider=" + providerId;
+  currExSettings.href = "/controls/settings?extension=" + nameId;
   currExSettings.style.cursor = "pointer";
   settings.appendChild(currExSettings);
 }
@@ -159,7 +159,7 @@ async function addExSettingsSidebar() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId + "_side";
   currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?provider=" + providerId;
+  currExSettings.href = "/controls/settings?extension=" + nameId;
   currExSettings.style.cursor = "pointer";
   settings.appendChild(currExSettings);
 }
@@ -175,7 +175,9 @@ async function readSettings() {
 
 // Creating the settings page
 async function loadSettings() {
-  if (!window.location.toString().includes("?provider=" + providerId)) return;
+  console.log(window.location.toString());
+  console.log("?extension=" + nameId);
+  if (!window.location.toString().includes("?extension=" + nameId)) return;
   if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
 
   const columnPage = document.getElementById("columnpage");
