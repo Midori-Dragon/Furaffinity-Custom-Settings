@@ -13,6 +13,7 @@ class Settings {
       setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
       newSetting.id = setting.id;
     }
+    setting.name = newSetting.name;
     setting.type = newSetting.type;
     setting.defaultValue = newSetting.defaultValue;
     setting.value = newSetting.defaultValue;
@@ -52,6 +53,15 @@ class Settings {
     } catch (e) {
       console.error(e);
     }
+  }
+
+  toString() {
+    let settingsString = "(";
+    for (const setting of CustomSettings.Settings) {
+      settingsString += `"${setting.toString()}", `;
+    }
+    settingsString += ")";
+    return settingsString;
   }
 }
 
@@ -99,11 +109,16 @@ const SettingTypes = Object.freeze({
 class LocalSetting {
   constructor() {
     this.id;
+    this.name;
     this.type;
     this.document;
     this.action;
     this.value;
     this.defaultValue;
+  }
+
+  toString() {
+    return `${this.name} = ${this.value}`;
   }
 }
 
