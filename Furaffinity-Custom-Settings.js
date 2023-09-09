@@ -1,4 +1,7 @@
-//#region Globals
+let nameId;
+let providerId;
+let bodyContainer;
+
 class Settings {
   constructor() {
     this._name = "Extension Settings";
@@ -122,9 +125,7 @@ const SettingTypes = Object.freeze({
   Boolean: Symbol("Boolean"),
   Action: Symbol("Action"),
 });
-//#endregion
 
-//#region Locals
 class LocalSetting {
   constructor() {
     this.id;
@@ -140,11 +141,6 @@ class LocalSetting {
     return `${this.name} = ${this.value}`;
   }
 }
-
-let nameId;
-let providerId;
-let bodyContainer;
-//#endregion
 
 // Adding settings to the navigation menu
 async function addExSettings() {
