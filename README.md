@@ -2,6 +2,12 @@
 
 Helper Script to create Custom settings on Furaffinitiy
 
+#### Table of Contents
+
+- [How to use](#how-to-use)
+- [Feature Roadmap](#feature-roadmap)
+- [Documentation](#documentation)
+
 ## How to use
 
 - `@require` this script with the following url "https://raw.githubusercontent.com/Midori-Dragon/Furaffinity-Custom-Settings/main/Furaffinity-Custom-Settings.js"
@@ -15,13 +21,26 @@ Helper Script to create Custom settings on Furaffinitiy
   ```
 - Create a new Setting:
   ```javascript
-  const setting = new Setting("Setting Name", "Setting Description", SettingType, "Checkbox description", DefaultValue, Action);
+  const setting = new Setting("Setting Name", "Setting Description", SettingType, "Type Description", DefaultValue, Action);
   ```
   See [Setting](#setting) for more info
 - Trigger when settings should be loaded:
   ```javascript
   CustomSettings.loadSettings();
   ```
+
+## Feature Roadmap
+
+- [x] Create new Settings and easily access Settings change
+- [x] Have different Setting Types
+  - [x] Number (TextField that only allowes Numbers)
+  - [x] Boolean (Checkbox with a description)
+  - [x] Action (Button with a description)
+  - [ ] Text (TextField that allow any Characters)
+- [x] Change Settings Page Name and Header Name
+- [ ] Have multiple different Setting Pages
+
+## Documentation
 
 ### Setting
 
@@ -31,7 +50,7 @@ The Setting class contains following Properties:
 - `name` - Name of the Setting. _(Also defines Settings Header name)_
 - `description` - Description of the Setting.
 - `type` - Type of the Setting. _(See [SettingTypes](#settingtypes) for more info)_
-- `typeDescription` - Description of the Setting element itself. _(Only applies on `SettingTypes.Boolean`)_
+- `typeDescription` - Description of the Setting element itself. _(Doesn't apply on `SettingTypes.Number`)_
 - `defaultValue` - Default value for the Setting. _(Is ignored on `SettingTypes.Action`)_
 - `action` - Action that is executed when the Setting changes. _(See [Action](#action) for more info)_
 - `value` - Current value of the Setting.
@@ -40,8 +59,8 @@ The Setting class contains following Properties:
 
 SettingTypes can have the following values:
 
-- `SettingTypes.Number` - A TextField that only accepts Numbers
-- `SettingTypes.Boolean` - A Checkbox with a description (Checkbox description only applies if this Type was chosen)
+- `SettingTypes.Number` - A TextField that only accepts Numbers _(Type Description doesn't aplly here)_
+- `SettingTypes.Boolean` - A Checkbox with a description
 - `SettingTypes.Action` - A Button with a certain Action
 
 ### Action
