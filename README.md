@@ -19,6 +19,10 @@ Helper Script to create Custom settings on Furaffinitiy
   ```javascript
   CustomSettings.Provider = "Midori's Script Settings";
   ```
+- _Optional:_ Change the Settings Header Name:
+  ```javascript
+  CustomSettings.HeaderName = "My Script Settings";
+  ```
 - Create a new Setting:
   ```javascript
   const setting = new Setting("Setting Name", "Setting Description", SettingType, "Type Description", DefaultValue, Action);
