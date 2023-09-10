@@ -1,7 +1,47 @@
-let nameId;
-let providerId;
-let bodyContainer;
+//#region Global Access
+const CustomSettings = new Settings();
+const SettingTypes = Object.freeze({
+  Number: Symbol("Number"),
+  Boolean: Symbol("Boolean"),
+  Action: Symbol("Action"),
+});
 
+class Setting {
+  constructor(name, description, type, typeDescription, defaultValue, action) {
+    this._id;
+    this.name = name;
+    this.description = description;
+    this.type = type;
+    this.typeDescription = typeDescription;
+    this.defaultValue = defaultValue;
+    this.action = action;
+    this._idFirstSet = true;
+
+    addSetting(this);
+  }
+
+  set id(newValue) {
+    if (this._idFirstSet) {
+      this._id = newValue;
+      this._idFirstSet = false;
+    } else throw new Error("Can't set Id of a Setting that was already been set.");
+  }
+  get id() {
+    return this._id;
+  }
+
+  set value(newValue) {
+    getLocalSettingById(this._id).value = newValue;
+  }
+  get value() {
+    const setting = getLocalSettingById(this._id);
+    setting.value = readSettingValue(setting);
+    return setting.value;
+  }
+}
+//#endregion
+
+//#region Local Access
 class Settings {
   constructor() {
     this._name = "Extension Settings";
@@ -28,48 +68,13 @@ class Settings {
     return this._provider;
   }
 
-  addSetting(newSetting) {
-    const setting = new LocalSetting();
-    if (newSetting.id) setting.id = newSetting.id;
-    else {
-      setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
-      newSetting.id = setting.id;
-    }
-    setting.name = newSetting.name;
-    setting.type = newSetting.type;
-    setting.defaultValue = newSetting.defaultValue;
-    setting.value = newSetting.defaultValue;
-    setting.document = createSetting(setting.id, newSetting.name, newSetting.description, newSetting.type, newSetting.typeDescription, (target) => {
-      let value;
-      switch (setting.type) {
-        case SettingTypes.Number:
-          value = +target.value;
-          setting.value = value;
-          newSetting.value = value;
-          if (value == setting.defaultValue) localStorage.removeItem(setting.id);
-          else localStorage.setItem(setting.id, value);
-          break;
-        case SettingTypes.Boolean:
-          value = target.checked;
-          setting.value = value;
-          newSetting.value = value;
-          if (value == setting.defaultValue) localStorage.removeItem(setting.id);
-          else localStorage.setItem(setting.id, value);
-          break;
-      }
-      setting.action(target);
-    });
-    setting.action = newSetting.action;
-    CustomSettings.Settings.push(setting);
-  }
-
   async loadSettings() {
     try {
       await readSettings();
       addExSettings();
       if (window.location.toString().includes("controls/settings")) {
         addExSettingsSidebar();
-        if (window.location.toString().includes("?extension=" + nameId)) loadSettings();
+        if (window.location.toString().includes("?extension=" + providerId)) loadSettings();
       }
     } catch (e) {
       console.error(e);
@@ -87,45 +92,6 @@ class Settings {
   }
 }
 
-class Setting {
-  constructor(name, description, type, typeDescription, defaultValue, action) {
-    this._id;
-    this.name = name;
-    this.description = description;
-    this.type = type;
-    this.typeDescription = typeDescription;
-    this.defaultValue = defaultValue;
-    this.action = action;
-    this._idFirstSet = true;
-
-    CustomSettings.addSetting(this);
-  }
-
-  set id(newValue) {
-    if (this._idFirstSet) {
-      this._id = newValue;
-      this._idFirstSet = false;
-    } else throw new Error("Can't set Id of a Setting that was already been set.");
-  }
-  get id() {
-    return this._id;
-  }
-
-  set value(newValue) {
-    getLocalSettingById(this._id).value = newValue;
-  }
-  get value() {
-    return getLocalSettingById(this._id).value;
-  }
-}
-
-const CustomSettings = new Settings();
-const SettingTypes = Object.freeze({
-  Number: Symbol("Number"),
-  Boolean: Symbol("Boolean"),
-  Action: Symbol("Action"),
-});
-
 class LocalSetting {
   constructor() {
     this.id;
@@ -133,8 +99,17 @@ class LocalSetting {
     this.type;
     this.document;
     this.action;
-    this.value;
+    this._value;
     this.defaultValue;
+  }
+
+  set value(newValue) {
+    this._value = newValue;
+    if (newValue == this.defaultValue) localStorage.removeItem(this.id);
+    else localStorage.setItem(this.id, newValue);
+  }
+  get value() {
+    return this._value;
   }
 
   toString() {
@@ -142,7 +117,46 @@ class LocalSetting {
   }
 }
 
-// Adding settings to the navigation menu
+let nameId;
+let providerId;
+let bodyContainer;
+//#endregion
+
+function addSetting(newSetting) {
+  const setting = new LocalSetting();
+  if (newSetting.id) setting.id = newSetting.id;
+  else {
+    setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
+    newSetting.id = setting.id;
+  }
+  setting.name = newSetting.name;
+  setting.type = newSetting.type;
+  setting.defaultValue = newSetting.defaultValue;
+  setting.value = newSetting.defaultValue;
+  setting.document = createSetting(setting.id, newSetting.name, newSetting.description, newSetting.type, newSetting.typeDescription, (target) => {
+    let value;
+    switch (setting.type) {
+      case SettingTypes.Number:
+        value = +target.value;
+        setting.value = value;
+        newSetting.value = value;
+        if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+        else localStorage.setItem(setting.id, value);
+        break;
+      case SettingTypes.Boolean:
+        value = target.checked;
+        setting.value = value;
+        newSetting.value = value;
+        if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+        else localStorage.setItem(setting.id, value);
+        break;
+    }
+    setting.action(target);
+  });
+  setting.action = newSetting.action;
+  CustomSettings.Settings.push(setting);
+}
+
 async function addExSettings() {
   if (document.getElementById(nameId)) return;
 
@@ -155,12 +169,11 @@ async function addExSettings() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId;
   currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?extension=" + nameId;
+  currExSettings.href = "/controls/settings?extension=" + providerId;
   currExSettings.style.cursor = "pointer";
   settings.appendChild(currExSettings);
 }
 
-// Adding settings to the settings sidebar menu
 async function addExSettingsSidebar() {
   if (document.getElementById(nameId + "_side")) return;
 
@@ -173,21 +186,23 @@ async function addExSettingsSidebar() {
   const currExSettings = document.createElement("a");
   currExSettings.id = providerId + "_side";
   currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?extension=" + nameId;
+  currExSettings.href = "/controls/settings?extension=" + providerId;
   currExSettings.style.cursor = "pointer";
   settings.appendChild(currExSettings);
 }
 
-// Reading stored Settings data
 async function readSettings() {
   for (const setting of CustomSettings.Settings) {
-    const value = localStorage.getItem(setting.id);
-    if (value == null || value == undefined) continue;
-    setting.value = convertStringToValue(value);
+    setting.value = readSettingValue(setting);
   }
 }
 
-// Creating the settings page
+function readSettingValue(setting) {
+  const value = localStorage.getItem(setting.id);
+  if (value == null || value == undefined) return setting.defaultValue;
+  return convertStringToValue(value);
+}
+
 async function loadSettings() {
   if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
 
@@ -209,7 +224,6 @@ async function loadSettings() {
   bodyContainer = document.createElement("div");
   bodyContainer.className = "section-body";
 
-  // Creating the settings
   for (const setting of CustomSettings.Settings) {
     const settingElem = setting.document.querySelector(`[id="${setting.id}"]`);
     switch (setting.type) {
@@ -319,11 +333,9 @@ function createSettingAction(id, typeDescription, action) {
 
 function makeIdCompatible(inputString) {
   const sanitizedString = inputString
-    .replace(/[^a-zA-Z0-9-_\.]/g, "-") // Replace invalid characters with hyphens
-    .replace(/^-+|-+$/g, "") // Remove leading and trailing hyphens
-    .replace(/^-*(?=\d)/, "id-"); // Prefix with 'id-' if it starts with a digit
-
-  // Ensure the ID starts with a letter
+    .replace(/[^a-zA-Z0-9-_\.]/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/^-*(?=\d)/, "id-");
   return /^[0-9]/.test(sanitizedString) ? "id-" + sanitizedString : sanitizedString;
 }
 
