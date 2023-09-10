@@ -1,51 +1,9 @@
-//#region Global Access
-const CustomSettings = new Settings();
-const SettingTypes = Object.freeze({
-  Number: Symbol("Number"),
-  Boolean: Symbol("Boolean"),
-  Action: Symbol("Action"),
-});
-
-class Setting {
-  constructor(name, description, type, typeDescription, defaultValue, action) {
-    this._id;
-    this.name = name;
-    this.description = description;
-    this.type = type;
-    this.typeDescription = typeDescription;
-    this.defaultValue = defaultValue;
-    this.action = action;
-    this._idFirstSet = true;
-
-    addSetting(this);
-  }
-
-  set id(newValue) {
-    if (this._idFirstSet) {
-      this._id = newValue;
-      this._idFirstSet = false;
-    } else throw new Error("Can't set Id of a Setting that was already been set.");
-  }
-  get id() {
-    return this._id;
-  }
-
-  set value(newValue) {
-    getLocalSettingById(this._id).value = newValue;
-  }
-  get value() {
-    const setting = getLocalSettingById(this._id);
-    setting.value = readSettingValue(setting);
-    return setting.value;
-  }
-}
-//#endregion
-
 //#region Local Access
 class Settings {
   constructor() {
     this._name = "Extension Settings";
     this._provider = "Custom Furaffinity Settings";
+    this.HeaderName = "Extension Settings";
     this.Settings = [];
 
     nameId = makeIdCompatible(this._name);
@@ -120,6 +78,49 @@ class LocalSetting {
 let nameId;
 let providerId;
 let bodyContainer;
+//#endregion
+
+//#region Global Access
+class Setting {
+  constructor(name, description, type, typeDescription, defaultValue, action) {
+    this._id;
+    this.name = name;
+    this.description = description;
+    this.type = type;
+    this.typeDescription = typeDescription;
+    this.defaultValue = defaultValue;
+    this.action = action;
+    this._idFirstSet = true;
+
+    addSetting(this);
+  }
+
+  set id(newValue) {
+    if (this._idFirstSet) {
+      this._id = newValue;
+      this._idFirstSet = false;
+    } else throw new Error("Can't set Id of a Setting that was already been set.");
+  }
+  get id() {
+    return this._id;
+  }
+
+  set value(newValue) {
+    getLocalSettingById(this._id).value = newValue;
+  }
+  get value() {
+    const setting = getLocalSettingById(this._id);
+    setting.value = readSettingValue(setting);
+    return setting.value;
+  }
+}
+
+const CustomSettings = new Settings();
+const SettingTypes = Object.freeze({
+  Number: Symbol("Number"),
+  Boolean: Symbol("Boolean"),
+  Action: Symbol("Action"),
+});
 //#endregion
 
 function addSetting(newSetting) {
@@ -218,7 +219,7 @@ async function loadSettings() {
   const headerContainer = document.createElement("div");
   headerContainer.className = "section-header";
   const header = document.createElement("h2");
-  header.textContent = CustomSettings.Name;
+  header.textContent = CustomSettings.HeaderName;
   headerContainer.appendChild(header);
   section.appendChild(headerContainer);
   bodyContainer = document.createElement("div");
