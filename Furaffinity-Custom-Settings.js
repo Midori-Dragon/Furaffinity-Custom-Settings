@@ -42,7 +42,7 @@ class Settings {
   toString() {
     let settingsString = "(";
     for (const setting of CustomSettings.Settings) {
-      settingsString += `"${setting.toString()}", `;
+      if (setting.type !== SettingTypes.Action) settingsString += `"${setting.toString()}", `;
     }
     settingsString = settingsString.slice(0, -2);
     settingsString += ")";
