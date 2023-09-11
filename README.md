@@ -1,6 +1,6 @@
 # Furaffinity Custom Settings
 
-Helper Script to create Custom settings on Furaffinitiy
+Helper Script to create Custom settings on Furaffinitiy. Also see this Script on Greasy Fork as [Furaffinity-Custom-Settings](https://greasyfork.org/de/scripts/475041-furaffinity-custom-settings)
 
 #### Table of Contents
 
