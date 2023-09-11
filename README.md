@@ -42,7 +42,7 @@ Helper Script to create Custom settings on Furaffinitiy
   - [x] Action (Button with a description)
   - [ ] Text (TextField that allow any Characters)
 - [x] Change Settings Page Name and Header Name
-- [ ] Have multiple different Setting Pages
+- [x] Have multiple different Setting Pages
 
 ## Documentation
 
