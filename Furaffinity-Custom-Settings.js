@@ -159,37 +159,43 @@ function addSetting(newSetting) {
 }
 
 async function addExSettings() {
-  if (document.getElementById(nameId)) return;
-
   const settings = document.querySelector('ul[class="navhideonmobile"]').querySelector('a[href="/controls/settings/"]').parentNode;
-  const exSettingsHeader = document.createElement("h3");
-  exSettingsHeader.id = nameId;
-  exSettingsHeader.textContent = CustomSettings.Name;
-  settings.appendChild(exSettingsHeader);
 
-  const currExSettings = document.createElement("a");
-  currExSettings.id = providerId;
-  currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?extension=" + providerId;
-  currExSettings.style.cursor = "pointer";
-  settings.appendChild(currExSettings);
+  if (!document.getElementById(nameId)) {
+    const exSettingsHeader = document.createElement("h3");
+    exSettingsHeader.id = nameId;
+    exSettingsHeader.textContent = CustomSettings.Name;
+    settings.appendChild(exSettingsHeader);
+  }
+
+  if (!document.getElementById(providerId)) {
+    const currExSettings = document.createElement("a");
+    currExSettings.id = providerId;
+    currExSettings.textContent = CustomSettings.Provider;
+    currExSettings.href = "/controls/settings?extension=" + providerId;
+    currExSettings.style.cursor = "pointer";
+    settings.appendChild(currExSettings);
+  }
 }
 
 async function addExSettingsSidebar() {
-  if (document.getElementById(nameId + "_side")) return;
-
   const settings = document.getElementById("controlpanelnav");
-  const exSettingsHeader = document.createElement("h3");
-  exSettingsHeader.id = nameId + "_side";
-  exSettingsHeader.textContent = CustomSettings.Name;
-  settings.appendChild(exSettingsHeader);
 
-  const currExSettings = document.createElement("a");
-  currExSettings.id = providerId + "_side";
-  currExSettings.textContent = CustomSettings.Provider;
-  currExSettings.href = "/controls/settings?extension=" + providerId;
-  currExSettings.style.cursor = "pointer";
-  settings.appendChild(currExSettings);
+  if (!document.getElementById(nameId + "_side")) {
+    const exSettingsHeader = document.createElement("h3");
+    exSettingsHeader.id = nameId + "_side";
+    exSettingsHeader.textContent = CustomSettings.Name;
+    settings.appendChild(exSettingsHeader);
+  }
+
+  if (!document.getElementById(providerId + "_side")) {
+    const currExSettings = document.createElement("a");
+    currExSettings.id = providerId + "_side";
+    currExSettings.textContent = CustomSettings.Provider;
+    currExSettings.href = "/controls/settings?extension=" + providerId;
+    currExSettings.style.cursor = "pointer";
+    settings.appendChild(currExSettings);
+  }
 }
 
 async function readSettings() {
