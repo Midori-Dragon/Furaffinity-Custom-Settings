@@ -152,7 +152,7 @@ function addSetting(newSetting) {
         else localStorage.setItem(setting.id, value);
         break;
     }
-    setting.action(target);
+    if (setting.action) setting.action(target);
   });
   setting.action = newSetting.action;
   CustomSettings.Settings.push(setting);
