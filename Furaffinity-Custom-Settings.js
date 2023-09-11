@@ -127,13 +127,15 @@ function addSetting(newSetting) {
   const setting = new LocalSetting();
   if (newSetting.id) setting.id = newSetting.id;
   else {
-    setting.id = nameId + "_" + makeIdCompatible(newSetting.name);
+    setting.id = providerId + "_" + makeIdCompatible(newSetting.name);
     newSetting.id = setting.id;
   }
   setting.name = newSetting.name;
   setting.type = newSetting.type;
   setting.defaultValue = newSetting.defaultValue;
-  setting.value = newSetting.defaultValue;
+  const savedValue = localStorage.getItem(setting.id);
+  if (savedValue == null || savedValue == undefined) setting.value = setting.defaultValue;
+  else setting.value = convertStringToValue(savedValue);
   setting.document = createSetting(setting.id, newSetting.name, newSetting.description, newSetting.type, newSetting.typeDescription, (target) => {
     let value;
     switch (setting.type) {
