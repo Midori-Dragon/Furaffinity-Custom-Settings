@@ -1,365 +1,394 @@
-//#region Local Access
-class Settings {
-  constructor() {
-    this._name = "Extension Settings";
-    this._provider = "Custom Furaffinity Settings";
-    this.HeaderName = "Extension Settings";
-    this.Settings = [];
+// ==UserScript==
+// @name        Furaffinity-Custom-Settings
+// @namespace   Violentmonkey Scripts
+// @grant       none
+// @version     4.0.13
+// @author      Midori Dragon
+// @description Helper Script to create Custom settings on Furaffinitiy
+// @icon        https://www.furaffinity.net/themes/beta/img/banners/fa_logo.png?v2
+// @homepageURL https://greasyfork.org/de/scripts/475041-furaffinity-custom-settings
+// @supportURL  https://greasyfork.org/de/scripts/475041-furaffinity-custom-settings/feedback
+// @license     MIT
+// ==/UserScript==
 
-    nameId = makeIdCompatible(this._name);
-    providerId = makeIdCompatible(this._provider);
-  }
+// jshint esversion: 8
 
-  set Name(value) {
-    this._name = value;
-    nameId = makeIdCompatible(this._name);
-  }
-  get Name() {
-    return this._name;
-  }
+(() => {
+  window.Settings = class Settings {
+    constructor() {
+      this._name = "Extension Settings";
+      this._nameId = makeIdCompatible(this._name);
+      this._provider = "Custom Furaffinity Settings";
+      this._providerId = makeIdCompatible(this._provider);
+      this.headerName = "Extension Settings";
+      this.settings = [];
+    }
 
-  set Provider(value) {
-    this._provider = value;
-    providerId = makeIdCompatible(this._provider);
-  }
-  get Provider() {
-    return this._provider;
-  }
+    set name(value) {
+      this._name = value;
+      this._nameId = makeIdCompatible(value);
+    }
+    get name() {
+      return this._name;
+    }
+    get nameId() {
+      return this._nameId;
+    }
 
-  async loadSettings() {
-    try {
-      await readSettings();
-      addExSettings();
-      if (window.location.toString().includes("controls/settings")) {
-        addExSettingsSidebar();
-        if (window.location.toString().includes("?extension=" + providerId)) loadSettings();
+    set provider(value) {
+      this._provider = value;
+      this._providerId = makeIdCompatible(value);
+    }
+    get provider() {
+      return this._provider;
+    }
+    get providerId() {
+      return this._providerId;
+    }
+
+    newSetting(name, description, type, typeDescription, defaultValue, action) {
+      const setting = new Setting(name, description, type, typeDescription, defaultValue, action);
+      setting.id = this._providerId + "_" + makeIdCompatible(setting.name);
+      setting.document = createSetting(setting, (target) => {
+        let value;
+        switch (setting.type.description) {
+          case "Number":
+            value = +target.value;
+            if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+            else localStorage.setItem(setting.id, value);
+            break;
+          case "Text":
+            value = target.value;
+            if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+            else localStorage.setItem(setting.id, value);
+            break;
+          case "Boolean":
+            value = target.checked;
+            if (value == setting.defaultValue) localStorage.removeItem(setting.id);
+            else localStorage.setItem(setting.id, value);
+            break;
+        }
+        if (setting.action) setting.action(target);
+      });
+      this.settings.push(setting);
+      return setting;
+    }
+
+    async loadSettings() {
+      try {
+        addExSettings(this._name, this._provider, this._nameId, this._providerId);
+        if (window.location.toString().includes("controls/settings")) {
+          addExSettingsSidebar(this._name, this._provider, this._nameId, this._providerId);
+          if (window.location.toString().includes("?extension=" + this._providerId)) loadSettings(this.headerName, this.settings);
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
     }
-  }
 
-  toString() {
-    let settingsString = "(";
-    for (const setting of CustomSettings.Settings) {
-      if (setting.type !== SettingTypes.Action) settingsString += `"${setting.toString()}", `;
+    toString() {
+      if (!this.settings || this.settings.length === 0) return "";
+      let settingsString = "(";
+      for (const setting of this.settings) {
+        if (setting.type.description != "Action") settingsString += `"${setting.toString()}", `;
+      }
+      settingsString = settingsString.slice(0, -2);
+      settingsString += ")";
+      return settingsString;
     }
-    settingsString = settingsString.slice(0, -2);
-    settingsString += ")";
-    return settingsString;
-  }
-}
+  };
 
-class LocalSetting {
-  constructor() {
-    this.id;
-    this.name;
-    this.type;
-    this.document;
-    this.action;
-    this._value;
-    this.defaultValue;
-  }
-
-  set value(newValue) {
-    this._value = newValue;
-    if (newValue == this.defaultValue) localStorage.removeItem(this.id);
-    else localStorage.setItem(this.id, newValue);
-  }
-  get value() {
-    return this._value;
-  }
-
-  toString() {
-    return `${this.name} = ${this.value}`;
-  }
-}
-
-let nameId;
-let providerId;
-let bodyContainer;
-//#endregion
-
-//#region Global Access
-class Setting {
-  constructor(name, description, type, typeDescription, defaultValue, action) {
-    this._id;
-    this.name = name;
-    this.description = description;
-    this.type = type;
-    this.typeDescription = typeDescription;
-    this.defaultValue = defaultValue;
-    this.action = action;
-    this._idFirstSet = true;
-
-    addSetting(this);
-  }
-
-  set id(newValue) {
-    if (this._idFirstSet) {
-      this._id = newValue;
-      this._idFirstSet = false;
-    } else throw new Error("Can't set Id of a Setting that was already been set.");
-  }
-  get id() {
-    return this._id;
-  }
-
-  set value(newValue) {
-    getLocalSettingById(this._id).value = newValue;
-  }
-  get value() {
-    const setting = getLocalSettingById(this._id);
-    setting.value = readSettingValue(setting);
-    return setting.value;
-  }
-}
-
-const CustomSettings = new Settings();
-const SettingTypes = Object.freeze({
-  Number: Symbol("Number"),
-  Boolean: Symbol("Boolean"),
-  Action: Symbol("Action"),
-});
-//#endregion
-
-function addSetting(newSetting) {
-  const setting = new LocalSetting();
-  if (newSetting.id) setting.id = newSetting.id;
-  else {
-    setting.id = providerId + "_" + makeIdCompatible(newSetting.name);
-    newSetting.id = setting.id;
-  }
-  setting.name = newSetting.name;
-  setting.type = newSetting.type;
-  setting.defaultValue = newSetting.defaultValue;
-  const savedValue = localStorage.getItem(setting.id);
-  if (savedValue == null || savedValue == undefined) setting.value = setting.defaultValue;
-  else setting.value = convertStringToValue(savedValue);
-  setting.document = createSetting(setting.id, newSetting.name, newSetting.description, newSetting.type, newSetting.typeDescription, (target) => {
-    let value;
-    switch (setting.type) {
-      case SettingTypes.Number:
-        value = +target.value;
-        setting.value = value;
-        newSetting.value = value;
-        if (value == setting.defaultValue) localStorage.removeItem(setting.id);
-        else localStorage.setItem(setting.id, value);
-        break;
-      case SettingTypes.Boolean:
-        value = target.checked;
-        setting.value = value;
-        newSetting.value = value;
-        if (value == setting.defaultValue) localStorage.removeItem(setting.id);
-        else localStorage.setItem(setting.id, value);
-        break;
-    }
-    if (setting.action) setting.action(target);
+  let localSettingsCreated = false;
+  window.CustomSettings = new Settings();
+  window.SettingTypes = Object.freeze({
+    Number: Symbol("Number"),
+    Boolean: Symbol("Boolean"),
+    Action: Symbol("Action"),
+    Text: Symbol("Text"),
   });
-  setting.action = newSetting.action;
-  CustomSettings.Settings.push(setting);
-}
 
-async function addExSettings() {
-  const settings = document.querySelector('ul[class="navhideonmobile"]').querySelector('a[href="/controls/settings/"]').parentNode;
+  class Setting {
+    constructor(name, description, type, typeDescription, defaultValue, action) {
+      this._id;
+      this.name = name;
+      this.description = description;
+      this.type = type;
+      this.typeDescription = typeDescription;
+      this.defaultValue = defaultValue;
+      this.action = action;
+      this._idFirstSet = true;
+    }
 
-  if (!document.getElementById(nameId)) {
-    const exSettingsHeader = document.createElement("h3");
-    exSettingsHeader.id = nameId;
-    exSettingsHeader.textContent = CustomSettings.Name;
-    settings.appendChild(exSettingsHeader);
+    set id(newValue) {
+      if (this._idFirstSet) {
+        this._id = newValue;
+        this._idFirstSet = false;
+      } else throw new Error("Can't set Id of a Setting that was already been set.");
+    }
+    get id() {
+      return this._id;
+    }
+
+    set value(newValue) {
+      if (newValue == this.defaultValue) localStorage.removeItem(this._id);
+      else localStorage.setItem(this._id, newValue);
+      const elem = document.getElementById(this._id);
+      if (elem) {
+        switch (this.type.description) {
+          case "Number":
+          case "Text":
+            elem.value = newValue;
+            break;
+          case "Boolean":
+            elem.checked = newValue;
+            break;
+        }
+      }
+    }
+    get value() {
+      const newValue = localStorage.getItem(this._id);
+      if (newValue == null || newValue == undefined) return this.defaultValue;
+      return convertStringToValue(newValue);
+    }
+
+    toString() {
+      return `${this.name} = ${this.value}`;
+    }
   }
 
-  if (!document.getElementById(providerId)) {
-    const currExSettings = document.createElement("a");
-    currExSettings.id = providerId;
-    currExSettings.textContent = CustomSettings.Provider;
-    currExSettings.href = "/controls/settings?extension=" + providerId;
-    currExSettings.style.cursor = "pointer";
-    settings.appendChild(currExSettings);
-  }
-}
+  const FuraffinitySettingsSettings = new Settings();
+  FuraffinitySettingsSettings.name = "Extension Settings";
+  FuraffinitySettingsSettings.provider = "Custom-Furaffinity-Settings";
+  FuraffinitySettingsSettings.headerName = "Global Custom-Furaffinity-Settings";
+  const showResetButtonSetting = FuraffinitySettingsSettings.newSetting("Show Reset Button", 'Set wether the "Reset this Setting" button is shown in other Settings.', SettingTypes.Boolean, "Show Reset Button", true);
+  localSettingsCreated = true;
+  FuraffinitySettingsSettings.loadSettings();
 
-async function addExSettingsSidebar() {
-  const settings = document.getElementById("controlpanelnav");
+  async function addExSettings(name, provider, nameId, providerId) {
+    const settings = document.querySelector('ul[class="navhideonmobile"]').querySelector('a[href="/controls/settings/"]').parentNode;
 
-  if (!document.getElementById(nameId + "_side")) {
-    const exSettingsHeader = document.createElement("h3");
-    exSettingsHeader.id = nameId + "_side";
-    exSettingsHeader.textContent = CustomSettings.Name;
-    settings.appendChild(exSettingsHeader);
-  }
+    if (!document.getElementById(nameId)) {
+      const exSettingsHeader = document.createElement("h3");
+      exSettingsHeader.id = nameId;
+      exSettingsHeader.textContent = name;
+      settings.appendChild(exSettingsHeader);
+    }
 
-  if (!document.getElementById(providerId + "_side")) {
-    const currExSettings = document.createElement("a");
-    currExSettings.id = providerId + "_side";
-    currExSettings.textContent = CustomSettings.Provider;
-    currExSettings.href = "/controls/settings?extension=" + providerId;
-    currExSettings.style.cursor = "pointer";
-    settings.appendChild(currExSettings);
-  }
-}
-
-async function readSettings() {
-  for (const setting of CustomSettings.Settings) {
-    setting.value = readSettingValue(setting);
-  }
-}
-
-function readSettingValue(setting) {
-  const value = localStorage.getItem(setting.id);
-  if (value == null || value == undefined) return setting.defaultValue;
-  return convertStringToValue(value);
-}
-
-async function loadSettings() {
-  if (!CustomSettings || !CustomSettings.Settings || CustomSettings.Settings.length === 0) return;
-
-  const columnPage = document.getElementById("columnpage");
-  const content = columnPage.querySelector('div[class="content"]');
-
-  for (const section of content.querySelectorAll('section:not([class="exsettings"])')) {
-    section.parentNode.removeChild(section);
+    if (!document.getElementById(providerId)) {
+      const currExSettings = document.createElement("a");
+      currExSettings.id = providerId;
+      currExSettings.textContent = provider;
+      currExSettings.href = "/controls/settings?extension=" + providerId;
+      currExSettings.style.cursor = "pointer";
+      settings.appendChild(currExSettings);
+    }
   }
 
-  const section = document.createElement("section");
-  section.className = "exsettings";
-  const headerContainer = document.createElement("div");
-  headerContainer.className = "section-header";
-  const header = document.createElement("h2");
-  header.textContent = CustomSettings.HeaderName;
-  headerContainer.appendChild(header);
-  section.appendChild(headerContainer);
-  bodyContainer = document.createElement("div");
-  bodyContainer.className = "section-body";
+  async function addExSettingsSidebar(name, provider, nameId, providerId) {
+    const settings = document.getElementById("controlpanelnav");
 
-  for (const setting of CustomSettings.Settings) {
-    const settingElem = setting.document.querySelector(`[id="${setting.id}"]`);
-    switch (setting.type) {
-      case SettingTypes.Number:
-        settingElem.value = setting.value;
+    if (!document.getElementById(nameId + "_side")) {
+      const exSettingsHeader = document.createElement("h3");
+      exSettingsHeader.id = nameId + "_side";
+      exSettingsHeader.textContent = name;
+      settings.appendChild(exSettingsHeader);
+    }
+
+    if (!document.getElementById(providerId + "_side")) {
+      const currExSettings = document.createElement("a");
+      currExSettings.id = providerId + "_side";
+      currExSettings.textContent = provider;
+      currExSettings.href = "/controls/settings?extension=" + providerId;
+      currExSettings.style.cursor = "pointer";
+      settings.appendChild(currExSettings);
+      settings.appendChild(document.createElement("br"));
+    }
+  }
+
+  async function loadSettings(headerName, settings) {
+    if (!settings || settings.length === 0) return;
+    if (document.getElementById(headerName + "_settingscontainer")) return;
+
+    const columnPage = document.getElementById("columnpage");
+    const content = columnPage.querySelector('div[class="content"]');
+
+    for (const section of content.querySelectorAll('section:not([class="exsettings"])')) {
+      section.parentNode.removeChild(section);
+    }
+
+    const section = document.createElement("section");
+    section.id = headerName + "_settingscontainer";
+    section.className = "exsettings";
+    const headerContainer = document.createElement("div");
+    headerContainer.className = "section-header";
+    const header = document.createElement("h2");
+    header.textContent = headerName;
+    headerContainer.appendChild(header);
+    section.appendChild(headerContainer);
+    const bodyContainer = document.createElement("div");
+    bodyContainer.className = "section-body";
+
+    for (const setting of settings) {
+      const settingElem = setting.document.querySelector(`[id="${setting.id}"]`);
+      switch (setting.type.description) {
+        case "Number":
+          settingElem.value = setting.value;
+          break;
+        case "Text":
+          settingElem.value = setting.value;
+          break;
+        case "Boolean":
+          settingElem.checked = setting.value;
+          break;
+      }
+      bodyContainer.appendChild(setting.document);
+    }
+
+    section.appendChild(bodyContainer);
+    content.appendChild(section);
+  }
+
+  function createSetting(setting, action) {
+    const settingContainer = document.createElement("div");
+    settingContainer.className = "control-panel-item-container";
+
+    const settingName = document.createElement("div");
+    settingName.className = "control-panel-item-name";
+    const settingNameText = document.createElement("h4");
+    settingNameText.textContent = setting.name;
+    settingName.appendChild(settingNameText);
+    settingContainer.appendChild(settingName);
+
+    const settingDesc = document.createElement("div");
+    settingDesc.className = "control-panel-item-description";
+    const settingDescText = document.createTextNode(setting.description);
+    settingDesc.appendChild(settingDescText);
+    settingContainer.appendChild(settingDesc);
+
+    if (localSettingsCreated && showResetButtonSetting.value) {
+      settingDesc.appendChild(document.createElement("br"));
+      settingDesc.appendChild(createSettingReset(setting));
+    }
+
+    const settingOption = document.createElement("div");
+    settingOption.className = "control-panel-item-options";
+
+    switch (setting.type.description) {
+      case "Number":
+        settingOption.appendChild(createSettingNumber(setting.id, action));
         break;
-      case SettingTypes.Boolean:
-        settingElem.checked = setting.value;
+      case "Boolean":
+        settingOption.appendChild(createSettingBoolean(setting.id, setting.typeDescription, action));
+        break;
+      case "Action":
+        settingOption.appendChild(createSettingAction(setting.id, setting.typeDescription, action));
+        break;
+      case "Text":
+        settingOption.appendChild(createSettingText(setting.id, action));
         break;
     }
-    bodyContainer.appendChild(setting.document);
+
+    settingContainer.appendChild(settingOption);
+    return settingContainer;
   }
 
-  section.appendChild(bodyContainer);
-  content.appendChild(section);
-}
-
-function createSetting(id, name, description, type, typeDescription, action) {
-  const settingContainer = document.createElement("div");
-  settingContainer.className = "control-panel-item-container";
-
-  const settingName = document.createElement("div");
-  settingName.className = "control-panel-item-name";
-  const settingNameText = document.createElement("h4");
-  settingNameText.textContent = name;
-  settingName.appendChild(settingNameText);
-  settingContainer.appendChild(settingName);
-
-  const settingDesc = document.createElement("div");
-  settingDesc.className = "control-panel-item-description";
-  const settingDescText = document.createTextNode(description);
-  settingDesc.appendChild(settingDescText);
-  settingContainer.appendChild(settingDesc);
-
-  const settingOption = document.createElement("div");
-  settingOption.className = "control-panel-item-options";
-
-  switch (type) {
-    case SettingTypes.Number:
-      settingOption.appendChild(createSettingNumber(id, action));
-      break;
-    case SettingTypes.Boolean:
-      settingOption.appendChild(createSettingBoolean(id, typeDescription, action));
-      break;
-    case SettingTypes.Action:
-      settingOption.appendChild(createSettingAction(id, typeDescription, action));
-      break;
+  function createSettingReset(setting) {
+    const settingDescReset = document.createElement("a");
+    settingDescReset.id = setting.id + "_settingreset";
+    settingDescReset.textContent = "Reset this Setting";
+    settingDescReset.style.cursor = "pointer";
+    settingDescReset.style.color = "aqua";
+    settingDescReset.style.textDecoration = "underline";
+    settingDescReset.style.fontStyle = "italic";
+    settingDescReset.style.fontSize = "14px";
+    settingDescReset.onclick = () => {
+      const userConfirmed = window.confirm(`Are you sure you want to Reset the "${setting.name}" Setting to its default value?`);
+      if (userConfirmed) setting.value = setting.defaultValue;
+    };
+    return settingDescReset;
   }
 
-  settingContainer.appendChild(settingOption);
-  return settingContainer;
-}
+  function createSettingNumber(id, action) {
+    const settingElem = document.createElement("input");
+    settingElem.id = id;
+    settingElem.type = "text";
+    settingElem.className = "textbox";
+    settingElem.addEventListener("keydown", (event) => {
+      const currentValue = parseInt(settingElem.value) || 0;
+      if (event.key === "ArrowUp") {
+        settingElem.value = (currentValue + 1).toString();
+        action(settingElem);
+      } else if (event.key === "ArrowDown") {
+        if (currentValue != 0) settingElem.value = (currentValue - 1).toString();
+        action(settingElem);
+      }
+    });
+    settingElem.addEventListener("input", () => {
+      settingElem.value = settingElem.value.replace(/[^0-9]/g, "");
+      if (settingElem.value < 0) settingElem.value = 0;
+    });
+    settingElem.addEventListener("input", () => action(settingElem));
+    return settingElem;
+  }
 
-function createSettingNumber(id, action) {
-  const setting = document.createElement("input");
-  setting.id = id;
-  setting.type = "text";
-  setting.className = "textbox";
-  setting.addEventListener("keydown", (event) => {
-    const currentValue = parseInt(setting.value) || 0;
-    if (event.key === "ArrowUp") {
-      setting.value = (currentValue + 1).toString();
-      action(setting);
-    } else if (event.key === "ArrowDown") {
-      if (currentValue != 0) setting.value = (currentValue - 1).toString();
-      action(setting);
+  function createSettingText(id, action) {
+    const settingElem = document.createElement("input");
+    settingElem.id = id;
+    settingElem.type = "text";
+    settingElem.className = "textbox";
+    settingElem.addEventListener("keydown", (event) => action(settingElem));
+    settingElem.addEventListener("input", () => action(settingElem));
+    return settingElem;
+  }
+
+  function createSettingBoolean(id, typeDescription, action) {
+    const container = document.createElement("div");
+    const settingElem = document.createElement("input");
+    settingElem.id = id;
+    settingElem.type = "checkbox";
+    settingElem.style.cursor = "pointer";
+    settingElem.style.marginRight = "4px";
+    settingElem.addEventListener("change", () => action(settingElem));
+    container.appendChild(settingElem);
+    const settingElemLabel = document.createElement("label");
+    settingElemLabel.textContent = typeDescription;
+    settingElemLabel.style.cursor = "pointer";
+    settingElemLabel.style.userSelect = "none";
+    settingElemLabel.addEventListener("click", () => {
+      settingElem.checked = !settingElem.checked;
+      action(settingElem);
+    });
+    container.appendChild(settingElemLabel);
+    return container;
+  }
+
+  function createSettingAction(id, typeDescription, action) {
+    const settingElem = document.createElement("button");
+    settingElem.id = id;
+    settingElem.type = "button";
+    settingElem.className = "button standard mobile-fix";
+    settingElem.textContent = typeDescription;
+    settingElem.addEventListener("click", () => action(settingElem));
+    return settingElem;
+  }
+
+  function makeIdCompatible(inputString) {
+    const sanitizedString = inputString
+      .replace(/[^a-zA-Z0-9-_\.]/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/^-*(?=\d)/, "id-");
+    return /^[0-9]/.test(sanitizedString) ? "id-" + sanitizedString : sanitizedString;
+  }
+
+  function convertStringToValue(value) {
+    if (value === "true" || value === "false") {
+      return value === "true";
     }
-  });
-  setting.addEventListener("input", () => {
-    setting.value = setting.value.replace(/[^0-9]/g, "");
-    if (setting.value < 0) setting.value = 0;
-  });
-  setting.addEventListener("input", () => action(setting));
-  return setting;
-}
 
-function createSettingBoolean(id, typeDescription, action) {
-  const container = document.createElement("div");
-  const setting = document.createElement("input");
-  setting.id = id;
-  setting.type = "checkbox";
-  setting.style.cursor = "pointer";
-  setting.style.marginRight = "4px";
-  setting.addEventListener("change", () => action(setting));
-  container.appendChild(setting);
-  const settingLabel = document.createElement("label");
-  settingLabel.textContent = typeDescription;
-  settingLabel.style.cursor = "pointer";
-  settingLabel.style.userSelect = "none";
-  settingLabel.addEventListener("click", () => {
-    setting.checked = !setting.checked;
-    action(setting);
-  });
-  container.appendChild(settingLabel);
-  return container;
-}
-
-function createSettingAction(id, typeDescription, action) {
-  const setting = document.createElement("button");
-  setting.id = id;
-  setting.type = "button";
-  setting.className = "button standard mobile-fix";
-  setting.textContent = typeDescription;
-  setting.addEventListener("click", () => action(setting));
-  return setting;
-}
-
-function makeIdCompatible(inputString) {
-  const sanitizedString = inputString
-    .replace(/[^a-zA-Z0-9-_\.]/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/^-*(?=\d)/, "id-");
-  return /^[0-9]/.test(sanitizedString) ? "id-" + sanitizedString : sanitizedString;
-}
-
-function getLocalSettingById(id) {
-  return CustomSettings.Settings.find((setting) => setting.id === id);
-}
-
-function convertStringToValue(value) {
-  if (value === "true" || value === "false") {
-    return value === "true";
+    const parsedNumber = parseFloat(value);
+    if (!isNaN(parsedNumber)) {
+      return parsedNumber;
+    }
+    return value;
   }
-
-  const parsedNumber = parseFloat(value);
-  if (!isNaN(parsedNumber)) {
-    return parsedNumber;
-  }
-  return value;
-}
+})();
