@@ -40,7 +40,7 @@ Helper Script to create Custom settings on Furaffinitiy. Also see this Script on
   - [x] Number (TextField that only allowes Numbers)
   - [x] Boolean (Checkbox with a description)
   - [x] Action (Button with a description)
-  - [ ] Text (TextField that allow any Characters)
+  - [x] Text (TextField that allow any Characters)
 - [x] Change Settings Page Name and Header Name
 - [x] Have multiple different Setting Pages
 
